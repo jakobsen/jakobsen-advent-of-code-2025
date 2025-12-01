@@ -29,6 +29,15 @@ impl From<&str> for Move {
     }
 }
 
+impl From<&Move> for i16 {
+    fn from(value: &Move) -> Self {
+        match value.direction {
+            Direction::Left => -value.clicks,
+            Direction::Right => value.clicks,
+        }
+    }
+}
+
 fn main() {
     let (_final_position, times_passing_zero, times_at_zero) = include_str!("input.txt")
         .split("\n")
@@ -40,7 +49,7 @@ fn main() {
                 let next_position = turn(position, &next_move);
                 let next_times_passing_zero =
                     times_passing_zero + count_zero_passes(position, &next_move);
-                let next_times_at_zero = times_at_zero + if next_position == 0 { 1 } else { 0 };
+                let next_times_at_zero = times_at_zero + i16::from(next_position == 0);
                 (next_position, next_times_passing_zero, next_times_at_zero)
             },
         );
@@ -60,18 +69,7 @@ fn split_first_char(s: &str) -> Option<(char, &str)> {
 }
 
 fn turn(current_position: i16, next_move: &Move) -> i16 {
-    let minimal_turn: i16 = next_move.clicks % 100;
-    match next_move.direction {
-        Direction::Left => {
-            let next_position = current_position - minimal_turn;
-            if next_position < 0 {
-                next_position + 100
-            } else {
-                next_position
-            }
-        }
-        Direction::Right => (current_position + minimal_turn) % 100,
-    }
+    (current_position + i16::from(next_move)).rem_euclid(100)
 }
 
 fn count_zero_passes(position: i16, next_move: &Move) -> i16 {
